@@ -1,0 +1,4 @@
+interface:
+  display_name: "小浪花直播中控监控插件"
+  short_description: "安装、验证、发布视频号实时监控 Chrome 插件"
+  default_prompt: "Use $wavekol-live-monitor-extension to install, validate, package, or guide the WaveKOL live monitor Chrome extension."
