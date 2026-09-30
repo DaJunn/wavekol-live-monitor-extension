@@ -1,65 +1,38 @@
 ---
 name: wavekol-live-monitor-extension
-description: WaveKOL 小浪花直播中控实时监控 Chrome 插件的安装、验证、打包、发布和使用指导。Use when the user asks to install, update, debug, package, publish, distribute, explain, or use the “小浪花直播中控监控” / WaveKOL live monitor Chrome extension for 视频号 dashboardV4 real-time monitoring, red/yellow/green operations decisions, heat traffic share, live trend monitoring, or copying AI review prompts.
+description: 安装、使用或维护小浪花直播中控监控 Chrome 插件，查看视频号 dashboardV4 的实时趋势、加热占比和红黄绿运营提示。适用于插件排错、调整规则、验证和打包；需要另备插件源码。
 ---
 
 # 小浪花直播中控监控插件
 
-用于维护和使用独立 Chrome MV3 插件：`~/Projects/wavekol-live-monitor-extension`。插件读取用户已打开、已登录的视频号 `dashboardV4` 数据大屏，侧边栏每 5 秒显示红黄绿运营建议。
+指导使用和维护独立 Chrome MV3 插件。本机已核对的插件版本为 0.1.1：读取已登录的视频号数据大屏，每 5 秒更新侧边栏，正常使用无需 Kimi WebBridge。本 skill 仓库只含操作说明，**不含插件源码或安装包**；其他版本先核对实际实现。
 
-## 快速流程
+## 先确认输入
 
-1. 先读 `references/live-monitor-plugin.md`，确认项目路径、安全边界、字段口径和验证命令。
-2. 根据用户意图选择：
-   - 安装 / 使用：给 Chrome 手动加载目录步骤，不自动改浏览器扩展状态。
-   - 更新 / 修复：修改项目代码，跑 `npm test`、语法检查、`npm run zip`、`unzip -t`。
-   - 发布 / 发同事：生成 zip；只有用户明确要求时才上传飞书云盘或设置公开权限。
-   - 排错：先确认当前页是 `channels.weixin.qq.com/platform/statistic/dashboardV4`，再看侧边栏「读取状态」。
-3. 输出时用中文，称呼用户，说清楚：结果、改动、验证、风险、下一步。
+- 任务：安装使用、排错、修改规则，或打包分发。
+- 实际插件目录：本机约定为 `~/Projects/wavekol-live-monitor-extension`，其他机器以用户已有位置为准。
+- 涉及页面时，确认目标场次与 `dashboardV4` 主页面；排错还需当前「读取状态」或扩展错误信息。
 
-## 必守边界
+先检查插件目录的 `manifest.json`、`package.json` 和 `src/`。缺少源码时说明依赖缺口，不把这个 skill 目录当作 Chrome 扩展加载，也不声称已安装。
 
-- 只读当前已登录页面的结构化 runtime store。
-- 不代登录、不绕过视频号后台权限。
-- 不读取或输出 cookie、authorization、token、localStorage、sessionStorage、密码或浏览器配置。
-- 不自动点击后台按钮，不自动投流，不自动发飞书。
-- 不添加 `<all_urls>`、`debugger`、`webRequest`、`cookies` 权限，除非用户单独确认并说明风险。
+## 按任务执行
 
-## 常用命令
+| 任务 | 操作与交付 |
+|---|---|
+| 安装 / 使用 | Chrome 打开 `chrome://extensions`，启用开发者模式，加载实际插件目录；打开已登录的数据大屏后点插件图标。检查侧边栏的场次、读取时间和指标是否更新。 |
+| 排错 | 先核对页面、场次与「读取状态」，再检查 service worker / 扩展错误页。页面 store 缺失时刷新主页面一次；仍失败就报告缺失状态，不改用截图猜金额。 |
+| 修改 / 调规则 | 先读实际源码与 [字段和验证参考](references/live-monitor-plugin.md)，只改相关规则。阈值是本地经验规则，不能当作平台限流证据。 |
+| 打包 / 分发 | 跑实际项目支持的检查，再生成 zip 并检查完整性。用户要求上传或公开分享时才执行对应动作；本地打包、上传成功、可下载分别报告。 |
 
-```bash
-cd ~/Projects/wavekol-live-monitor-extension
-npm test
-node --check service_worker.js
-node --check src/page-reader.js
-node --check src/live-monitor-core.js
-node --check src/sidepanel.js
-npm run zip
-unzip -t release/wavekol-live-monitor-extension.zip
-```
+## 验证与结果
 
-安装给运营使用：
+详细命令见 [参考](references/live-monitor-plugin.md)。修改后至少检查核心测试、JavaScript 语法、manifest 权限和 zip 完整性。静态检查通过后，只能报告这些检查通过；插件可用还需在用户有权查看的真实页面确认侧边栏刷新、金额单位与加热占比。
 
-1. Chrome 打开 `chrome://extensions`。
-2. 打开「开发者模式」。
-3. 点「加载已解压的扩展程序」。
-4. 选择 `~/Projects/wavekol-live-monitor-extension`。
-5. 打开视频号数据大屏后点插件图标。
+结果简洁列出：已完成动作、源码/安装包位置、通过的检查、未验证项，以及当前需处理的问题。红色「读取失败」与红色经营预警分开解释。
 
-## 排错顺序
+## 边界
 
-1. 页面不对：提示用户打开 dashboardV4 主页面，不要用截图估算。
-2. 读不到 store：刷新主页面，等待 iframe 加载；不要读 cookie 或 storage。
-3. 指标异常：用 `wechat-channels-data-reader` 的真实 raw/CSV 样例交叉验证字段口径。
-4. 插件不打开：检查 `manifest.json`、service worker 控制台、Chrome 扩展错误页。
-5. 打包失败：先跑语法检查，再重新 `npm run zip`。
-
-## 版本发布
-
-- 本地 release zip：`release/wavekol-live-monitor-extension.zip`。
-- 发布给团队前必须确认：
-  - `npm test` 通过。
-  - `unzip -t` 通过。
-  - `manifest.json` 只有 `https://channels.weixin.qq.com/*` 站点权限。
-  - 扫描无敏感读取：`document.cookie`、`localStorage`、`sessionStorage`、`authorization`、`fetch(`。
-- 上传飞书云盘或设为互联网可下载前，必须有用户明确要求。
+- 读取已登录页面的结构化数据，不代登录，不读取 Cookie、会话存储或凭据。
+- 不自动投流、改商品、发消息；侧边栏建议由运营结合现场判断。
+- 保留当前最小权限；新增 `<all_urls>`、`debugger`、`webRequest`、`cookies` 等权限前解释用途并取得授权。
+- GMV 与加热流量占比不能直接代表公司收入、毛利润或投流回报。
